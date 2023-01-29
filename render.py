@@ -33,7 +33,7 @@ class Cell:
             self.neighbors.append(matrix[x][y+1])
             
     def clear_walls(self):
-        for neighbor in self.neighbors:
+        for neighbor in self.neighbors.copy():
             if neighbor.type == "⬛":
                 self.neighbors.remove(neighbor)
 
