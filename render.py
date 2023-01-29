@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+import graph_search
 
 def get_cell_type (cell):
     
@@ -35,7 +36,21 @@ class Cell:
         for neighbor in self.neighbors:
             if neighbor.type == "⬛":
                 self.neighbors.remove(neighbor)
+
+    def __repr__(self) -> str:
+        return f"Cell({self.coords}, {self.type})"
         
+class Graph:
+    
+    def __init__(self, matrix):
+        self.goals = []
+        for x in matrix:
+            for y in x:
+                if y.type == "🚩":
+                    self.initial = y
+                if y.type == "🏁":
+                    self.goals.append(y)
+
 
 img = Image.open('a.png')
 
@@ -60,6 +75,15 @@ for x in matrix:
         print(y.type, end=" ")
     print()
     
-print(
-    matrix[1][2].neighbors[3].type,
-)
+
+graph = Graph(matrix)
+
+ala = graph_search.graph_search(graph, graph.goals[0])
+for x in ala:
+    x.type = "🔽"
+
+
+for x in matrix:
+    for y in x:
+        print(y.type, end=" ")
+    print()
