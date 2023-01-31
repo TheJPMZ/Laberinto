@@ -1,6 +1,8 @@
 from PIL import Image
 import numpy as np
 import graph_search
+import pygame
+
 
 def get_cell_type (cell):
         
@@ -16,8 +18,6 @@ def get_color(type) -> tuple:
         "🏁": (0,255,0)
     }
     return colors[type]
-    
-
 
 class Cell:
     
@@ -49,6 +49,9 @@ class Cell:
     
     def set_heuristic(self, goal):
         self.heuristic = self.distance(goal)
+    
+    def set_heuristic2(self, goal):
+        self.heuristic = self.distance(goal)/2
 
     def __repr__(self) -> str:
         return f"Cell({self.coords}, {self.type})"
@@ -70,80 +73,127 @@ class Graph:
 
 
 img = Image.open('a.png')
-
-
 matrix = np.array(img)
+matrix = matrix.tolist() # Numpy array to normal array
 
-# Numpy array to normal array
-matrix = matrix.tolist()
+if len(matrix) != len(matrix[0]):
+    raise Exception("Image must be squared")
 
+if len(matrix) < 2:
+    raise Exception("Image must be bigger than 2x2")
+
+# if the image is bigger than 64x64, resize it
+size = 64*4
+if len(matrix) > size:
+    print("Resizing image to 64x64...")
+    img = img.resize((size,size))
+    matrix = np.array(img)
+    matrix = matrix.tolist()
+    
+
+# Converting the array to a matrix of cells
+print("Converting to matrix...")
 for x in range(len(matrix)):
     for y in range(len(matrix[x])):
         matrix[x][y] = Cell(matrix[x][y], x, y)
 
+print("Setting neighbors...")
 for x in matrix:
     for y in x:
         y.set_neighbors(matrix)
         y.clear_walls()
 
-
-for x in matrix:
-    for y in x:
-        print(y.type, end=" ")
-    print()
-    
-
+print("Creating graph...")
 graph = Graph(matrix)
 
-for x in graph:
-    for y in x:
-        y.set_heuristic(graph.goals[0])
+def get_path(graph, goal, search_algorithm):
+    
+    if search_algorithm == 1:
+        for x in graph:
+            for y in x:
+                y.set_heuristic2(goal)
+                
+    if search_algorithm == 0:
+        for x in graph:
+            for y in x:
+                y.set_heuristic(goal)
+    
+    print(search_algorithm%4)
+    
+    ala = graph_search.graph_search(graph, goal, search_algorithm%4)
+    
+    if not ala:
+        raise Exception("No path found")
 
-ala = graph_search.graph_search(graph, graph.goals[0])
-# TODO: No path found
-for x in ala:
-    x.color = (0,0,255)
+    for x in ala:
+        x.color = (0,0,255)
 
-
-for x in matrix:
-    for y in x:
-        print(y.type, end=" ")
-    print()
+    print("Done!")  
     
-    
-    
-    
-    
+"""Pygame rendering"""
 
 screen_size = 640
 relation = 640/len(matrix)
-    
-#Screen
 
-
-import pygame
 display = pygame.display
-pygame.display.init()
-pygame.display.set_caption("Pathfinding")
-window = pygame.display.set_mode((640,640))
+display.init()
+display.set_caption("Pathfinding")
+window = display.set_mode((640,640))
 
 def update_window():
     display.update()
 
-def draw_grid():
+def draw_graph():
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
             pygame.draw.rect(window, graph[x][y].color, (y*relation, x*relation, relation, relation))
-            
+
+
+
+
+
+# Grouping goals together
+for x in graph.goals.copy():
+    for y in graph.goals.copy():
+        if x.distance(y) < relation and x != y:
+            y.type = "⬜"
+            if len(graph.goals) > 1:
+                graph.goals.remove(y)
+            break
+    
+    
+
+
+
+
+goal_counter = 0
+algorithm = 0
+algo_list = ["A* with heuristic 1", "A* with heuristic 2", "BFS", "DFS"]
+
+
 run = True
 while run:
+    
+    draw_graph()
+    
+    display.set_caption(
+        f"Pathfinding - Algorithm: {algo_list[algorithm%4]} - Goal:{goal_counter%len(graph.goals)+1}"
+    )
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run =  False
         
         if event.type == pygame.MOUSEBUTTONDOWN:
-            draw_grid()
+            print("Finding path...")
+            get_path(graph, graph.goals[goal_counter%len(graph.goals)], algorithm%4)
+            print("Done!")
+            
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_TAB:
+                algorithm += 1
+            if event.key == pygame.K_SPACE:
+                goal_counter += 1
     
     update_window()
 pygame.quit()
