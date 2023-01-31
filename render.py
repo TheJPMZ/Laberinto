@@ -72,7 +72,7 @@ class Graph:
         return self.matrix[key]
 
 
-img = Image.open('a.png')
+img = Image.open('lab2.png')
 matrix = np.array(img)
 matrix = matrix.tolist() # Numpy array to normal array
 
@@ -83,7 +83,7 @@ if len(matrix) < 2:
     raise Exception("Image must be bigger than 2x2")
 
 # if the image is bigger than 64x64, resize it
-size = 64*4
+size = 64
 if len(matrix) > size:
     print("Resizing image to 64x64...")
     img = img.resize((size,size))
