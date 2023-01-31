@@ -30,6 +30,7 @@ Then you can select the algorithm you want to use and the program will show the 
 * `tab`: Change algorithm
 * `space`: Change goals
 * `r`: Reset the grid
+
 ![imagen](https://user-images.githubusercontent.com/64183934/215688776-7b13495c-b2b4-428d-a3fa-0fd8f9d088f2.png)
 
 ## Algorithms
